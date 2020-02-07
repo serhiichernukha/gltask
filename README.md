@@ -1,4 +1,4 @@
-## Terraform task
+## GL test task
 ___
 Deadline  | Candidate
 ------------- | -------------
