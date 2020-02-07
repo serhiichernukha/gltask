@@ -1,29 +1,39 @@
-Configuration IISWebsite
-{
-    param(
-        $NodeName
-    )
+#Windows demo scritp for WebServer Setup
 
-    Node $NodeName
-    {
-        WindowsFeature IIS
-        {
-            Ensure = "Present"
-            Name = "Web-Server"
-        }
-        WindowsFeature ASP
-        {
-            Ensure = "Present"
-            Name = "Web-Asp-Net45"
-        }
-        File WebContent
-        {
-            Ensure = "Present"
-            Type = "Directory"
-            SourcePath = "C:\Content\BakeryWebsite"
-            DestinationPath = "C:\inetpub\wwwroot\"
-            Recurse = $true
-        }
-    }
-
-} IISWebsite -NodeName "win_serv2"
+Install-WindowsFeature -Name Web-Server
+Install-WindowsFeature -Name Web-WebServer
+Install-WindowsFeature -Name Web-Common-Http
+Install-WindowsFeature -Name Web-Default-Doc
+Install-WindowsFeature -Name Web-Dir-Browsing
+Install-WindowsFeature -Name Web-Http-Errors
+Install-WindowsFeature -Name Web-Static-Content
+Install-WindowsFeature -Name Web-Health
+Install-WindowsFeature -Name Web-Http-Logging
+Install-WindowsFeature -Name Web-Request-Monitor
+Install-WindowsFeature -Name Web-Performance
+Install-WindowsFeature -Name Web-Stat-Compression
+Install-WindowsFeature -Name Web-Security
+Install-WindowsFeature -Name Web-Filtering
+Install-WindowsFeature -Name Web-Basic-Auth
+Install-WindowsFeature -Name Web-App-Dev
+Install-WindowsFeature -Name Web-Net-Ext
+Install-WindowsFeature -Name Web-Net-Ext45
+Install-WindowsFeature -Name Web-ASP
+Install-WindowsFeature -Name Web-Asp-Net
+Install-WindowsFeature -Name Web-Asp-Net45
+Install-WindowsFeature -Name Web-ISAPI-Ext
+Install-WindowsFeature -Name Web-ISAPI-Filter
+Install-WindowsFeature -Name Web-Mgmt-Tools
+Install-WindowsFeature -Name Web-Mgmt-Console
+Install-WindowsFeature -Name Web-Scripting-Tools
+Install-WindowsFeature -Name Web-Mgmt-Service
+Install-WindowsFeature -Name NET-Framework-Features
+Install-WindowsFeature -Name NET-Framework-Core
+Install-WindowsFeature -Name NET-Framework-45-Features
+Install-WindowsFeature -Name NET-Framework-45-Core
+Install-WindowsFeature -Name NET-Framework-45-ASPNET
+Install-WindowsFeature -Name NET-WCF-Services45 -IncludeAllSubFeature
+Install-WindowsFeature -Name WAS
+Install-WindowsFeature -Name WAS-Process-Model
+Install-WindowsFeature -Name WAS-Config-APIs
+Install-WindowsFeature -Name WoW64-Support

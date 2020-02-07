@@ -1,6 +1,7 @@
 *.tfvars
 *.json
 
+
 # Local .terraform directories
 **/.terraform/*
 
