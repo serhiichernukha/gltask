@@ -41,6 +41,9 @@ Check that VPC, security group and 2 subnets has been created
 
 Also check created instances in EC2. It should be **2** instances ( winser1, winserv2). Each instance is being include to own **Subnet** and **Availability Zone**.
 
+Due to requirements create **iam role**, **instance profile** and **policy**
+to get permissions for EC2 to read from S3 Bucked. Content file "index.html" copying to S3 via Terraform.
+
 ![](https://i.paste.pics/d70d325ecfb60b264ea322a1e16bf394.png?trs=f620bab9b8a145e7bbc0774c996ef0a07efbf147278d50b61c445cb7977ca6bd)
 
 Instance creating block for example.
