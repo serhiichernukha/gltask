@@ -1,107 +1,72 @@
 ## Terraform task
 ___
-Group  | Name
+Deadline  | Candidate
 ------------- | -------------
-kh032  | Serhii Chernukha
+7/2/2020  | Serhii Chernukha
 
 ### Task:
-Task:
-Deploy VPC and **3** subnets:
--	Services_subnet
--	Backend_subnet
--	Frontend_subnet
 
-**Services_subnet** will be accessible only from **Backend_subnet** and might be without opportunity accessing internet. **Backend_subnet** will have the separate configuration but with ability to work with internet in one way (NAT model). **Frontend subnet** instance might be accessible from external hosts with 443 port. (22, 80, 3389 – restricted).
-Deploy  3 ( > if possible )  AWS instances [Linux] in different subnets. Install apache on Frontend_subnet based one using “user data”.
+Create Cloud infrastructure via **Terraform** wich consist of:
+-	Application Load Balancer
+-	EC2(Windows)
+-	S3 Bucket
 
-*NOTES:*
-1)	Use loops (for/foreach preferable)  for resources creation ;
-2)	Split resources creation into 2 modules: networking and instances ;
-3)	Avoid any hardcode in non-variables files ;  
+Connect **EC2** to the **ALB**; Create **IAM Role** for EC2 to get read permission from **S3 Bucket**; Create PowerShell script for static website deploying (content like "index.html" must be downloaded from S3during script execution).
 
-**Acceptance criteria:**
-Terraform code pushed in your github/gitlab repo(add me to your repository members list w/ following email), tested in different scenario and passed verification. Testing scenario completed (manually login on each instance and check possibility to access one by one, frontend instance accessible from outside. Services_subnet based host have to be reachable only from Backend_subnet based instance.
+![](https://i.paste.pics/91ba0e9e037c8ea132684547bb1c76ad.png?trs=f620bab9b8a145e7bbc0774c996ef0a07efbf147278d50b61c445cb7977ca6bd)
+
 
 ___
 
 ## Terraform project
 
-We use AWS as a provider in our task. Start working with Terraform via command *terraform init* in our project directory for terraform initialization. Create main.tf and variables.tf files in root directory. Also create terraform.tfvars secure file with access credentials (don't forget to add this file in .gitignore). In our case **main.tf** consist of *provider* block, 2 *modules* (see README in modules directory) and look like this way:
-![](https://i.screenshot.net/m6dl7f6)
+We use AWS as a provider in our task. Start working with Terraform via command *terraform init* in our project directory for terraform initialization. Create main.tf and variables.tf files in root directory. Also create terraform.tfvars secure file with access credentials (advice: don't forget to add this file in .gitignore). In our case **main.tf** consist of *provider* block, 2 *resources* for VMs and 1 for Security group. And **variables.tf** file which is using for the  defining variables values.
 
-And **variables.tf** file which is using for the  defining variables values:
-![](https://i.screenshot.net/wzk95fp)
+Also create alb.tf, bucket.tf, iam.tf, network.tf, "provisioning" folder and "content" folder in root of project.
 ___
 
-Start project with *terraform init* for already created modules and continue with *terraform apply*
+Start project with *terraform init* for already created resources and continue with *terraform apply*
 
-![](https://i.screenshot.net/wymxna8)
+![](https://i.paste.pics/8fd1563d0316d051932cf0f3fc8b99cd.png?trs=f620bab9b8a145e7bbc0774c996ef0a07efbf147278d50b61c445cb7977ca6bd)
 
 Press "yes" and go to AWS website for checking functionality.
 
-Check that VPC, route tables and 3 subnets has been created
+### AWS
 
-![](https://i.screenshot.net/wpo0zsy)
-![](https://i.screenshot.net/wogpzs6)
-![](https://i.screenshot.net/wxe34se)
+Check that VPC, security group and 2 subnets has been created
 
-Also check created instances in EC2. You should have **5** instances ( 1 frontend instance, 1 backend instance, 3 service instances). There are 3 service instances in *service subnet* cause **count loop** was used for creating instance multiple times (by "inst_array" variable):
+![](https://i.paste.pics/5f511834c5daf973d24548e88a7a7282.png?trs=f620bab9b8a145e7bbc0774c996ef0a07efbf147278d50b61c445cb7977ca6bd)
+![](https://i.paste.pics/cc38b6869405a3fffec1e4245690a78a.png?trs=f620bab9b8a145e7bbc0774c996ef0a07efbf147278d50b61c445cb7977ca6bd)
+![](https://i.paste.pics/6ee003d00e436441d7807e42e1539b92.png?trs=f620bab9b8a145e7bbc0774c996ef0a07efbf147278d50b61c445cb7977ca6bd)
+
+Also check created instances in EC2. It should be **2** instances ( winser1, winserv2). Each instance is being include to own **Subnet** and **Availability Zone**.
+
+![](https://i.paste.pics/d70d325ecfb60b264ea322a1e16bf394.png?trs=f620bab9b8a145e7bbc0774c996ef0a07efbf147278d50b61c445cb7977ca6bd)
+
+Instance creating block for example.
 
 ```
-resource "aws_instance" "se_inst" {
-count = length(var.inst_array)
+resource "aws_instance" "win_web1" {
 ami = var.ami
-vpc_security_group_ids = [aws_security_group.services_secgr.id]
-subnet_id = var.subnet_id_se
+iam_instance_profile = "${aws_iam_instance_profile.my_profile.name}"
+vpc_security_group_ids = ["${aws_security_group.allow.id}"]
+subnet_id = tolist(data.aws_subnet_ids.all.ids)[0]
 instance_type = var.t2shape
 tags = {
- Name = var.inst_array[count.index]
+ Name = var.servername1
  }
- key_name = aws_key_pair.mykey.key_name
+key_name = "terraform-key"
+user_data = file("./provisioning/userdata1.ps1")
 }
 ```
 
-![](https://i.screenshot.net/w4jpjsj)
 
-After that connect to **frontend instance** via SSH using IPv4 Public IP and RSA key:
+After that go to the **Load Balancer** and configure it by steps:
 
-![](https://i.screenshot.net/wqnopce)
+  - Create target groups and include instances into respectively.
 
-This "frontend instance"
-included in "frontend subnet" and *frontend security group*. NAT Server, Apache and connection to Internet are included in this instance.
+  ![](https://i.paste.pics/cd8540c007728ecb2c100418910725eb.png?trs=f620bab9b8a145e7bbc0774c996ef0a07efbf147278d50b61c445cb7977ca6bd)
 
-Standard Apache and SSH listening ports was changed to **443** and **1992** respectively by using the  following commands in *user data.sh:*
-```
-#!/bin/bash
-echo -e "\nPort 1992" >> /etc/ssh/sshd_config
-sudo service sshd restart
-sudo yum -y update
-sudo yum -y install httpd
-sudo echo -e "\nListen 443" >>/etc/httpd/config/httpd.conf
-sudo service httpd start
-```
-Lets check Apache in web using frontend instance IPv4 Public IP and 443 port:
+  - Add listner to ALB with target group (*Forward Action*) using previosly created self-signed certificate.
 
-![](https://i.screenshot.net/w39v9ud)
-
-Now go to **.ssh** directory and create **id_rsa** file with private key from "mykey" key pair. This key must not be publicly viewable for SSH to work. Use this command if needed: ```chmod 400 mykey.pem```
-
-Check connection to **backend instance** from frontend instance using SSH command and Private IP:
-
-![](https://i.screenshot.net/w0md8t0)
-
-This instance is included in *backend subnet* and *backend security group* and use frontend instance for connecting to Internet:
-
-![](https://i.screenshot.net/wxrd8sm)
-
-Now go to **.ssh** directory and create **id_rsa** file with private key like in the previous case and check connection to **services instance** from frontend instance using SSH command and Private IP:
-
-![](https://i.screenshot.net/wlo1vtw)
-
-*Service instance* have only ingress access rule for 22 TCP port so any egress connections will be refused:
-
-![](https://i.screenshot.net/w9yw5sw)
-
-Every service instance in this subnet have same configuration
-
-## Thats all, folks!
+  ![](https://i.paste.pics/c4f979bf3e2fb4c453d25b4d11a4743d.png?trs=f620bab9b8a145e7bbc0774c996ef0a07efbf147278d50b61c445cb7977ca6bd)
